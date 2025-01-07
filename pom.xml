@@ -33,7 +33,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.9.1</version>
+        </dependency>
         <!-- Devtools (cho môi trường phát triển) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -41,7 +45,7 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-       
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
