@@ -11,6 +11,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureException;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +43,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
-            
+
             if (path.startsWith("/auth") || path.startsWith("/media")) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
@@ -83,7 +84,19 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return null;
     }
 
+    public boolean isTokenExpired(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration()
+                .before(new Date());
+    }
+
     private boolean validateToken(String token) {
+        if (isTokenExpired(token)) {
+            return false;  // Token đã hết hạn
+        }
         try {
             Jwts.parser()
                     .setSigningKey(secretKey)
