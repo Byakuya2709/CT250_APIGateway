@@ -1,9 +1,15 @@
 package ctu.gateway.utils;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.ArrayList;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 
 @Component
@@ -15,6 +21,17 @@ public class JwtUtil {
     // Thời gian hết hạn token (15 phút)
     @Value("${jwt.expiration}")
     private long EXPIRATION_TIME;
+
+  private String createToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
+    }
+
     // Trích xuất username (email) từ token
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();

@@ -1,19 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ctu.gateway.filter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ctu.gateway.utils.ErrorResponse;
+import ctu.gateway.utils.JwtUtil;  // Import JwtUtil
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureException;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -24,16 +17,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-/**
- *
- * @author admin
- */
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
-
+    private String secretKey = "your_secret_key";
+    
     public JwtAuthenticationFilter() {
         super(Config.class);
     }
@@ -43,13 +34,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
-
+            System.out.println(path);
             if (path.startsWith("/auth") || path.startsWith("/media")) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
             String token = resolveToken(exchange);
-
-            if (token == null || !validateToken(token)) {
+            System.out.println(token);
+            if (token == null) { // Sử dụng validateToken từ JwtUtil
                 try {
                     return handleUnauthorized(exchange);
                 } catch (JsonProcessingException ex) {
@@ -84,42 +75,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return null;
     }
 
-    public boolean isTokenExpired(String token) {
-        return Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration()
-                .before(new Date());
-    }
-
-    private boolean validateToken(String token) {
-        if (isTokenExpired(token)) {
-            return false;  // Token đã hết hạn
-        }
-        try {
-            Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .parseClaimsJws(token);
-            return true;
-        } catch (SignatureException e) {
-            return false;
-        }
-    }
-
-    private String getRoleFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("role", String.class);
-    }
+    // Lấy role từ token sử dụng JwtUtil
 
     private boolean isAuthorized(String role, String path) {
-        if (path.startsWith("/auth") || path.startsWith("/otp")) {
+        if (path.startsWith("/companies") && "COMPANY".equals(role)) {
             return true; // Public route
         }
-        if (path.startsWith("/user") && "USER".equals(role)) {
+        if (path.startsWith("/users") && "USER".equals(role)) {
             return true; // USER role
         }
         if (path.startsWith("/admin") && "ADMIN".equals(role)) {
@@ -143,7 +105,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private Mono<Void> handleForbidden(ServerWebExchange exchange) throws JsonProcessingException {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), "Forbidden");
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), "Forbiddennn");
 
         // Đảm bảo trả về JSON
         exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
@@ -155,8 +117,16 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
+        return (String) claims.get("role");
+    }
+
+    // Phương thức để lấy các claims từ JWT
     public static class Config {
         // Add configuration properties if needed
     }
-
 }
