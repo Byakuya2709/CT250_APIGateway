@@ -78,10 +78,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     // Lấy role từ token sử dụng JwtUtil
 
     private boolean isAuthorized(String role, String path) {
-        if (path.startsWith("/companies") && "COMPANY".equals(role)) {
+        if (path.startsWith("/companies") && "COMPANY".equals(role) || "ARTIST".equals(role) ) {
             return true; // Public route
         }
         if (path.startsWith("/users") && "USER".equals(role)) {
+            return true; // USER role
+        }
+        if (path.startsWith("/artists") && "ARTIST".equals(role)) {
             return true; // USER role
         }
         if (path.startsWith("/admin") && "ADMIN".equals(role)) {
