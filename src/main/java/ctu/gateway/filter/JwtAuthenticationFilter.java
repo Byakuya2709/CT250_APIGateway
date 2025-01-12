@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
     private String secretKey = "your_secret_key";
-    
+
     public JwtAuthenticationFilter() {
         super(Config.class);
     }
@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
             System.out.println(path);
-            if (path.startsWith("/auth") || path.startsWith("/media")) {
+            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/events")) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
             String token = resolveToken(exchange);
@@ -76,21 +76,25 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     // Lấy role từ token sử dụng JwtUtil
-
     private boolean isAuthorized(String role, String path) {
-        if (path.startsWith("/companies") && "COMPANY".equals(role) || "ARTIST".equals(role) ) {
-            return true; // Public route
+        if (path.startsWith("/companies")) {
+            // Vai trò COMPANY hoặc ARTIST được phép truy cập
+            return "COMPANY".equals(role) || "ARTIST".equals(role);
         }
-        if (path.startsWith("/users") && "USER".equals(role)) {
-            return true; // USER role
+        if (path.startsWith("/users")) {
+            // Chỉ USER được phép truy cập
+            return "USER".equals(role);
         }
-        if (path.startsWith("/artists") && "ARTIST".equals(role)) {
-            return true; // USER role
+        if (path.startsWith("/artists")) {
+            // ARTIST hoặc ADMIN được phép truy cập
+            return "COMPANY".equals(role) || "ARTIST".equals(role) || "COMPANY".equals(role);
         }
-        if (path.startsWith("/admin") && "ADMIN".equals(role)) {
-            return true; // ADMIN role
+        if (path.startsWith("/admin")) {
+            // Chỉ ADMIN được phép truy cập
+            return "ADMIN".equals(role);
         }
-        return false; // Unauthorized
+        // Mặc định không được phép
+        return false;
     }
 
     private Mono<Void> handleUnauthorized(ServerWebExchange exchange) throws JsonProcessingException {
