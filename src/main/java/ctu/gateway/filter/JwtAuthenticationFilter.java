@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
             System.out.println(path);
-            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/events")) {
+            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/events") || path.startsWith("/booking")) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
             String token = resolveToken(exchange);
@@ -81,6 +81,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             // Vai trò COMPANY hoặc ARTIST được phép truy cập
             return "COMPANY".equals(role) || "ARTIST".equals(role);
         }
+
         if (path.startsWith("/users")) {
             // Chỉ USER được phép truy cập
             return "USER".equals(role);
