@@ -79,16 +79,12 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     private boolean isAuthorized(String role, String path) {
         if (path.startsWith("/companies")) {
             // Vai trò COMPANY hoặc ARTIST được phép truy cập
-            return "COMPANY".equals(role) || "ARTIST".equals(role);
+            return "COMPANY".equals(role);
         }
 
         if (path.startsWith("/users")) {
             // Chỉ USER được phép truy cập
             return "USER".equals(role);
-        }
-        if (path.startsWith("/artists")) {
-            // ARTIST hoặc ADMIN được phép truy cập
-            return "COMPANY".equals(role) || "ARTIST".equals(role) || "COMPANY".equals(role);
         }
         if (path.startsWith("/admin")) {
             // Chỉ ADMIN được phép truy cập
