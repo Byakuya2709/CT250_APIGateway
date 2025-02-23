@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
             System.out.println(path);
-            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/events") || path.startsWith("/booking")  || path.startsWith("/payment") ) {
+            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/payment") ) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
             String token = resolveToken(exchange);
@@ -68,29 +69,35 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private String resolveToken(ServerWebExchange exchange) {
-        String bearerToken = exchange.getRequest().getHeaders().getFirst("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
+        HttpCookie tokenCookie = exchange.getRequest().getCookies().getFirst("token");
+        return (tokenCookie != null) ? tokenCookie.getValue() : null;
     }
+
+
 
     // Lấy role từ token sử dụng JwtUtil
     private boolean isAuthorized(String role, String path) {
         if (path.startsWith("/companies")) {
             // Vai trò COMPANY được phép truy cập
-            return "COMPANY".equals(role);
+            return "COMPANY".equals(role) || "ADMIN".equals(role);
+        }
+        if (path.startsWith("/booking")) {
+            // Vai trò COMPANY được phép truy cập
+            return "USER".equals(role) || "COMPANY".equals(role);
         }
          if (path.startsWith("/submissions")) {
             // Vai trò COMPANY  được phép truy cập
-            return "COMPANY".equals(role);
+             return "COMPANY".equals(role) || "ADMIN".equals(role);
         }
-
+        if (path.startsWith("/events")) {
+            // Vai trò COMPANY  được phép truy cập
+            return "COMPANY".equals(role) || "ADMIN".equals(role);
+        }
         if (path.startsWith("/users")) {
             // Chỉ USER được phép truy cập
             return "USER".equals(role);
         }
-        if (path.startsWith("/admin")) {
+        if (path.startsWith("/admins")) {
             // Chỉ ADMIN được phép truy cập
             return "ADMIN".equals(role);
         }

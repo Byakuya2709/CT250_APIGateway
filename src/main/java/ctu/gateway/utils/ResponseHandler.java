@@ -21,7 +21,6 @@ public class ResponseHandler {
         response.put("message",mes);
         response.put("status",statusCode);
         response.put("data",res);
-
         return new ResponseEntity<>(response,statusCode);
     }
       
