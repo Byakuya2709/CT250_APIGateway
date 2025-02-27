@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
             System.out.println(path);
-            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/payment") ) {
+            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/payment") || path.startsWith("/tickets") ) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
             String token = resolveToken(exchange);
