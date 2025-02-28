@@ -91,7 +91,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         }
         if (path.startsWith("/events")) {
             // Vai trò COMPANY  được phép truy cập
-            return "COMPANY".equals(role) || "ADMIN".equals(role);
+            return "COMPANY".equals(role) || "ADMIN".equals(role) || "USER".equals(role);
         }
         if (path.startsWith("/users")) {
             // Chỉ USER được phép truy cập
