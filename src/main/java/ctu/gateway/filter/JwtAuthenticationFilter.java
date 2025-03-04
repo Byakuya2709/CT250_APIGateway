@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             System.out.println("----------");
             String path = exchange.getRequest().getPath().toString();
             System.out.println(path);
-            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/payment") || path.startsWith("/tickets") ) {
+            if (path.startsWith("/auth") || path.startsWith("/media") || path.startsWith("/payment") || path.startsWith("/public") ) {
                 return chain.filter(exchange); // Chỉ tiếp tục mà không cần kiểm tra token
             }
             String token = resolveToken(exchange);
@@ -99,11 +99,19 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         }
          if (path.startsWith("/reports")) {
             // Chỉ USER được phép truy cập
-            return "ADMIN".equals(role);
+            return "ADMIN".equals(role) || "COMPANY".equals(role);
         }
         if (path.startsWith("/admins")) {
             // Chỉ ADMIN được phép truy cập
             return "ADMIN".equals(role);
+        }
+        if (path.startsWith("/payment")) {
+            // Chỉ ADMIN được phép truy cập
+            return "USER".equals(role) || "ADMIN".equals(role) || "COMPANY".equals(role);
+        }
+        if (path.startsWith("/tickets")) {
+            // Chỉ ADMIN được phép truy cập
+            return "USER".equals(role) || "ADMIN".equals(role) || "COMPANY".equals(role);
         }
         // Mặc định không được phép
         return false;
