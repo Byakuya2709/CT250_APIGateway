@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  mysql-db:
+    image: mysql:8
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: eventbox
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql  
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  event-service:
+    build: ./event-service
+    container_name: event-service
+    restart: always
+    depends_on:
+      - mysql-db
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/eventbox
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "root"
+
+  authen-service:
+    build: ./authen-service
+    container_name: authen-service
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/otp_db
+
+  blog-service:
+    build: ./blog-service
+    container_name: blog-service
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/blog_db
+
+  gateway:
+    build: ./gateway
+    container_name: api-gateway
+    restart: always
+    depends_on:
+      - event-service
+      - authen-service
+      - blog-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+volumes:
+  mysql-data:
+  mongo-data:
